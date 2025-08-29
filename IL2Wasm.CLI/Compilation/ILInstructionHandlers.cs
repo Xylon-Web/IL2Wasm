@@ -96,6 +96,21 @@ internal class Ldarg_0Handler : IInstructionHandler
     public string Handle(Instruction instr) => "local.get 0";
 }
 
+[ILInstructionHandler]
+internal class Ldarg_1Handler : IInstructionHandler
+{
+    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Ldarg_1;
+
+    public string Handle(Instruction instr) => "local.get 1";
+}
+
+[ILInstructionHandler]
+internal class Ldarg_2Handler : IInstructionHandler
+{
+    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Ldarg_2;
+    public string Handle(Instruction instr) => "local.get 2";
+}
+
 // ------------------------
 // Control flow
 // ------------------------
@@ -281,4 +296,58 @@ internal class CallvirtHandler : IInstructionHandler
 call ${wasmName}
 ";
     }
+}
+
+[ILInstructionHandler]
+internal class CallHandler : IInstructionHandler
+{
+    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Call;
+    public string Handle(Instruction instr)
+    {
+        if (instr.Operand is not MethodReference methodRef)
+            return ";; Invalid call operand";
+
+        string typeName = methodRef.DeclaringType.Name;
+        string methodName = methodRef.Name;
+
+        // Handle JS imports
+        var resolvedMethod = methodRef.Resolve();
+        if (resolvedMethod != null)
+        {
+            var jsImportAttr = resolvedMethod.CustomAttributes
+               .FirstOrDefault(a => a.AttributeType.Name == "JSImportAttribute");
+
+            if (jsImportAttr != null)
+            {
+                string importName = jsImportAttr.ConstructorArguments[1].Value?.ToString() ?? methodName;
+                return $";; JSImport call\ncall ${importName}";
+            }
+        }
+
+        // Handle DefaultInterpolatedStringHandler helpers
+        if (typeName == "DefaultInterpolatedStringHandler")
+        {
+            return methodName switch
+            {
+                ".ctor" => "nop ;; interpolated string constructor",
+                "AppendLiteral" => "nop ;; append literal",
+                "AppendFormatted" => "nop ;; append formatted",
+                "ToStringAndClear" => "nop ;; finalize interpolated string",
+                _ => $";; call {typeName}.{methodName} (unhandled)"
+            };
+        }
+
+
+        // Instance or static method calls
+        string wasmName = $"{typeName}_{methodName}";
+        string comment = !methodRef.HasThis || (methodRef.HasThis && !methodRef.Resolve().IsStatic)
+            ? $";; callvirt {typeName}.{methodName} (stack: ..., this, args...)"
+            : $";; call {typeName}.{methodName} (static method)";
+
+        return $@"
+{comment}
+call ${wasmName}
+";
+    }
+
 }

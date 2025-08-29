@@ -9,6 +9,7 @@ internal class CompilerVisitor : ICompilerVisitor
 {
     private readonly IWatWriter _writer;
     private readonly List<IInstructionHandler> _handlers;
+    private readonly List<(string module, string name, MethodDefinition method)> _jsImports = new();
 
     public CompilerVisitor(IWatWriter writer, IEnumerable<IInstructionHandler> handlers)
     {
@@ -18,11 +19,41 @@ internal class CompilerVisitor : ICompilerVisitor
 
     public void VisitAssembly(AssemblyDefinition assembly)
     {
+        // Collect imports first
+        foreach (var module in assembly.Modules)
+            foreach (var type in module.Types)
+                foreach (var method in type.Methods)
+                {
+                    var jsAttr = method.CustomAttributes
+                        .FirstOrDefault(a => a.AttributeType.FullName == "IL2Wasm.CLI.Interop.JSImportAttribute");
+                    if (jsAttr != null)
+                    {
+                        string moduleName = jsAttr.ConstructorArguments[0].Value?.ToString() ?? "env";
+                        string name = jsAttr.ConstructorArguments[1].Value?.ToString() ?? method.Name;
+                        _jsImports.Add((moduleName, name, method));
+                    }
+                }
+
         _writer.BeginModule();
+
+        // Emit all imports first
+        foreach (var import in _jsImports)
+        {
+            var paramTypes = import.method.Parameters
+                .Select(p => Conversion.GetWatType(p.ParameterType) ?? "i32")
+                .ToList();
+            var returnType = Conversion.GetWatType(import.method.ReturnType);
+            _writer.DeclareImport(import.name, import.module, paramTypes, returnType);
+        }
+
+        _writer.DeclareMemory();
+
         foreach (var module in assembly.Modules)
             VisitModule(module);
+
         _writer.EndModule();
-        if (_writer is TextWatWriter tw) tw.Flush();
+        if (_writer is TextWatWriter tw)
+            tw.Flush();
     }
 
     public void VisitModule(ModuleDefinition module)
@@ -53,7 +84,7 @@ internal class CompilerVisitor : ICompilerVisitor
 
     public void VisitMethod(MethodDefinition method)
     {
-        if (!method.HasBody)
+        if (!method.HasBody || method.CustomAttributes.Any(a => a.AttributeType.FullName == "IL2Wasm.CLI.Interop.JSImportAttribute"))
             return;
 
         string? returnType = Conversion.GetWatType(method.ReturnType);
@@ -75,13 +106,13 @@ internal class CompilerVisitor : ICompilerVisitor
         string name;
         if (method.IsConstructor && !method.IsStatic)
         {
-            name = $"{method.DeclaringType.Name}_ctor"; // Use _ctor instead of .ctor
+            name = $"{method.DeclaringType.Name}_ctor";
             paramTypes.Insert(0, "i32"); // this pointer
         }
         else if (!method.IsStatic) // instance method
         {
             name = $"{method.DeclaringType.Name}_{method.Name}";
-            paramTypes.Insert(0, "i32"); // this pointer
+            paramTypes.Insert(0, "i32");
         }
         else
         {

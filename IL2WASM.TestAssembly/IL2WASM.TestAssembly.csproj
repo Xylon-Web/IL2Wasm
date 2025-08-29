@@ -6,4 +6,18 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+	<Target Name="PostBuildCopyToCLI" AfterTargets="PostBuildEvent">
+		<PropertyGroup>
+			<CliOutputDir>..\IL2Wasm.CLI\bin\$(Configuration)\net9.0\</CliOutputDir>
+		</PropertyGroup>
+
+		<Message Text="Copying build output to IL2Wasm.CLI..." Importance="high" />
+
+		<Copy SourceFiles="$(TargetPath)" DestinationFolder="$(CliOutputDir)" SkipUnchangedFiles="true" />
+	</Target>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\IL2Wasm.CLI\IL2Wasm.CLI.csproj" />
+	</ItemGroup>
+
 </Project>

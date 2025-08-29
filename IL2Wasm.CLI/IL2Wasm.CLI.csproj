@@ -11,8 +11,4 @@
     <PackageReference Include="Mono.Cecil" Version="0.11.6" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\IL2WASM.TestAssembly\IL2WASM.TestAssembly.csproj" />
-  </ItemGroup>
-
 </Project>

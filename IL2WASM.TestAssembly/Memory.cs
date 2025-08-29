@@ -1,4 +1,4 @@
-﻿namespace IL2WASM.TestAssembly;
+﻿namespace IL2Wasm.TestAssembly;
 
 public static class Memory
 {

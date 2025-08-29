@@ -1,6 +1,6 @@
 ﻿using IL2Wasm.CLI.Interop;
 
-namespace IL2WASM.TestAssembly;
+namespace IL2Wasm.TestAssembly;
 
 public static class JSImports
 {

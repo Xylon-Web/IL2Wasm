@@ -1,5 +1,5 @@
 ﻿
-namespace IL2WASM.TestAssembly;
+namespace IL2Wasm.TestAssembly;
 
 /// <summary>
 /// A sample class to demonstrate IL to WASM conversion.

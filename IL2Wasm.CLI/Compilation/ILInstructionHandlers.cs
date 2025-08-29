@@ -132,6 +132,118 @@ internal class AddHandler : IInstructionHandler
 }
 
 [ILInstructionHandler]
+internal class SubHandler : IInstructionHandler
+{
+    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Sub;
+    public string Handle(Instruction instr) => "i32.sub";
+}
+
+[ILInstructionHandler]
+internal class MulHandler : IInstructionHandler
+{
+    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Mul;
+    public string Handle(Instruction instr) => "i32.mul";
+}
+
+[ILInstructionHandler]
+internal class DivHandler : IInstructionHandler
+{
+    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Div;
+    public string Handle(Instruction instr) => "i32.div_s"; // signed division
+}
+
+[ILInstructionHandler]
+internal class DivUnHandler : IInstructionHandler
+{
+    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Div_Un;
+    public string Handle(Instruction instr) => "i32.div_u"; // unsigned division
+}
+
+[ILInstructionHandler]
+internal class RemHandler : IInstructionHandler
+{
+    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Rem;
+    public string Handle(Instruction instr) => "i32.rem_s"; // signed remainder
+}
+
+[ILInstructionHandler]
+internal class RemUnHandler : IInstructionHandler
+{
+    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Rem_Un;
+    public string Handle(Instruction instr) => "i32.rem_u"; // unsigned remainder
+}
+
+[ILInstructionHandler]
+internal class AndHandler : IInstructionHandler
+{
+    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.And;
+    public string Handle(Instruction instr) => "i32.and";
+}
+
+[ILInstructionHandler]
+internal class OrHandler : IInstructionHandler
+{
+    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Or;
+    public string Handle(Instruction instr) => "i32.or";
+}
+
+[ILInstructionHandler]
+internal class XorHandler : IInstructionHandler
+{
+    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Xor;
+    public string Handle(Instruction instr) => "i32.xor";
+}
+
+[ILInstructionHandler]
+internal class ShlHandler : IInstructionHandler
+{
+    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Shl;
+    public string Handle(Instruction instr) => "i32.shl";
+}
+
+[ILInstructionHandler]
+internal class ShrHandler : IInstructionHandler
+{
+    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Shr;
+    public string Handle(Instruction instr) => "i32.shr_s"; // signed shift right
+}
+
+[ILInstructionHandler]
+internal class ShrUnHandler : IInstructionHandler
+{
+    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Shr_Un;
+    public string Handle(Instruction instr) => "i32.shr_u"; // unsigned shift right
+}
+
+[ILInstructionHandler]
+internal class NegHandler : IInstructionHandler
+{
+    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Neg;
+    public string Handle(Instruction instr) => "i32.const 0\ni32.sub";
+}
+
+[ILInstructionHandler]
+internal class CgtHandler : IInstructionHandler
+{
+    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Cgt;
+    public string Handle(Instruction instr) => "i32.gt_s";
+}
+
+[ILInstructionHandler]
+internal class CltHandler : IInstructionHandler
+{
+    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Clt;
+    public string Handle(Instruction instr) => "i32.lt_s";
+}
+
+[ILInstructionHandler]
+internal class CeqHandler : IInstructionHandler
+{
+    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Ceq;
+    public string Handle(Instruction instr) => "i32.eq";
+}
+
+[ILInstructionHandler]
 internal class NopHandler : IInstructionHandler
 {
     public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Nop;
@@ -144,6 +256,7 @@ internal class PopHandler : IInstructionHandler
     public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Pop;
     public string Handle(Instruction instr) => "drop";
 }
+
 
 // ------------------------
 // Field access

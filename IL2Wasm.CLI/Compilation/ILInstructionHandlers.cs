@@ -90,25 +90,23 @@ internal class LdlocHandler : IInstructionHandler
 }
 
 [ILInstructionHandler]
-internal class Ldarg_0Handler : IInstructionHandler
+internal class LdargHandler : IInstructionHandler
 {
-    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Ldarg_0;
-    public string Handle(Instruction instr) => "local.get 0";
-}
+    public bool CanHandle(Instruction instr) =>
+        instr.OpCode.Code is Code.Ldarg_0 or Code.Ldarg_1 or Code.Ldarg_2 or Code.Ldarg_3 or Code.Ldarg_S;
 
-[ILInstructionHandler]
-internal class Ldarg_1Handler : IInstructionHandler
-{
-    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Ldarg_1;
-
-    public string Handle(Instruction instr) => "local.get 1";
-}
-
-[ILInstructionHandler]
-internal class Ldarg_2Handler : IInstructionHandler
-{
-    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Ldarg_2;
-    public string Handle(Instruction instr) => "local.get 2";
+    public string Handle(Instruction instr)
+    {
+        int index = instr.Operand is ParameterDefinition p ? p.Index : instr.OpCode.Code switch
+        {
+            Code.Ldarg_0 => 0,
+            Code.Ldarg_1 => 1,
+            Code.Ldarg_2 => 2,
+            Code.Ldarg_3 => 3,
+            _ => -1
+        };
+        return $"local.get {index}";
+    }
 }
 
 // ------------------------
@@ -125,122 +123,39 @@ internal class RetHandler : IInstructionHandler
 // Arithmetic / Stack
 // ------------------------
 [ILInstructionHandler]
-internal class AddHandler : IInstructionHandler
+internal class ArithmeticHandler : IInstructionHandler
 {
-    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Add;
-    public string Handle(Instruction instr) => "i32.add";
-}
+    private static readonly Dictionary<Code, string> Map = new()
+    {
+        // Arithmetic
+        { Code.Add, "i32.add" },
+        { Code.Sub, "i32.sub" },
+        { Code.Mul, "i32.mul" },
+        { Code.Div, "i32.div_s" },
+        { Code.Div_Un, "i32.div_u" },
+        { Code.Rem, "i32.rem_s" },
+        { Code.Rem_Un, "i32.rem_u" },
 
-[ILInstructionHandler]
-internal class SubHandler : IInstructionHandler
-{
-    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Sub;
-    public string Handle(Instruction instr) => "i32.sub";
-}
+        // Bitwise
+        { Code.And, "i32.and" },
+        { Code.Or, "i32.or" },
+        { Code.Xor, "i32.xor" },
+        { Code.Shl, "i32.shl" },
+        { Code.Shr, "i32.shr_s" },
+        { Code.Shr_Un, "i32.shr_u" },
 
-[ILInstructionHandler]
-internal class MulHandler : IInstructionHandler
-{
-    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Mul;
-    public string Handle(Instruction instr) => "i32.mul";
-}
+        // Comparison
+        { Code.Cgt, "i32.gt_s" },
+        { Code.Clt, "i32.lt_s" },
+        { Code.Ceq, "i32.eq" },
 
-[ILInstructionHandler]
-internal class DivHandler : IInstructionHandler
-{
-    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Div;
-    public string Handle(Instruction instr) => "i32.div_s"; // signed division
-}
+        // Negation
+        { Code.Neg, "i32.const 0\ni32.sub" }
+    };
 
-[ILInstructionHandler]
-internal class DivUnHandler : IInstructionHandler
-{
-    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Div_Un;
-    public string Handle(Instruction instr) => "i32.div_u"; // unsigned division
-}
+    public bool CanHandle(Instruction instr) => Map.ContainsKey(instr.OpCode.Code);
 
-[ILInstructionHandler]
-internal class RemHandler : IInstructionHandler
-{
-    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Rem;
-    public string Handle(Instruction instr) => "i32.rem_s"; // signed remainder
-}
-
-[ILInstructionHandler]
-internal class RemUnHandler : IInstructionHandler
-{
-    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Rem_Un;
-    public string Handle(Instruction instr) => "i32.rem_u"; // unsigned remainder
-}
-
-[ILInstructionHandler]
-internal class AndHandler : IInstructionHandler
-{
-    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.And;
-    public string Handle(Instruction instr) => "i32.and";
-}
-
-[ILInstructionHandler]
-internal class OrHandler : IInstructionHandler
-{
-    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Or;
-    public string Handle(Instruction instr) => "i32.or";
-}
-
-[ILInstructionHandler]
-internal class XorHandler : IInstructionHandler
-{
-    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Xor;
-    public string Handle(Instruction instr) => "i32.xor";
-}
-
-[ILInstructionHandler]
-internal class ShlHandler : IInstructionHandler
-{
-    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Shl;
-    public string Handle(Instruction instr) => "i32.shl";
-}
-
-[ILInstructionHandler]
-internal class ShrHandler : IInstructionHandler
-{
-    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Shr;
-    public string Handle(Instruction instr) => "i32.shr_s"; // signed shift right
-}
-
-[ILInstructionHandler]
-internal class ShrUnHandler : IInstructionHandler
-{
-    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Shr_Un;
-    public string Handle(Instruction instr) => "i32.shr_u"; // unsigned shift right
-}
-
-[ILInstructionHandler]
-internal class NegHandler : IInstructionHandler
-{
-    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Neg;
-    public string Handle(Instruction instr) => "i32.const 0\ni32.sub";
-}
-
-[ILInstructionHandler]
-internal class CgtHandler : IInstructionHandler
-{
-    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Cgt;
-    public string Handle(Instruction instr) => "i32.gt_s";
-}
-
-[ILInstructionHandler]
-internal class CltHandler : IInstructionHandler
-{
-    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Clt;
-    public string Handle(Instruction instr) => "i32.lt_s";
-}
-
-[ILInstructionHandler]
-internal class CeqHandler : IInstructionHandler
-{
-    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Ceq;
-    public string Handle(Instruction instr) => "i32.eq";
+    public string Handle(Instruction instr) => Map[instr.OpCode.Code];
 }
 
 [ILInstructionHandler]

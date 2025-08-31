@@ -3,8 +3,8 @@ namespace IL2Wasm.TestAssembly;
 
 internal static class Test
 {
-    public static int TestMethod()
+    public static void TestMethod()
     {
-        return 1 + 1;
+        JSConsole.Log("Hello from IL2Wasm!");
     }
 }

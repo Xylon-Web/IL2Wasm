@@ -25,10 +25,10 @@ internal class Program
         // Discover and instantiate all instruction handlers marked with [ILInstructionHandler]
         var handlers = AppDomain.CurrentDomain.GetAssemblies()
             .SelectMany(a => a.GetTypes())
-            .Where(t => typeof(IInstructionHandler).IsAssignableFrom(t)
+            .Where(t => typeof(BaseInstructionHandler).IsAssignableFrom(t)
                         && !t.IsAbstract
                         && t.GetCustomAttribute<ILInstructionHandlerAttribute>() != null)
-            .Select(t => (IInstructionHandler)Activator.CreateInstance(t)!)
+            .Select(t => (BaseInstructionHandler)Activator.CreateInstance(t)!)
             .ToList();
 
         // Add default fallback handler

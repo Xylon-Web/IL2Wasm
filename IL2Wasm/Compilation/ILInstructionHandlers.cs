@@ -8,17 +8,19 @@ namespace IL2Wasm.Compilation;
 // ------------------------
 // Base instruction handler
 // ------------------------
-public interface IInstructionHandler
+public abstract class BaseInstructionHandler
 {
-    bool CanHandle(Instruction instr);
-    string Handle(Instruction instr);
+    public virtual Dictionary<string, string>? LocalVariables { get; set; }
+
+    public abstract bool CanHandle(Instruction instr);
+    public abstract string Handle(Instruction instr);
 }
 
-public class DefaultInstructionHandler : IInstructionHandler
+public class DefaultInstructionHandler : BaseInstructionHandler
 {
-    public bool CanHandle(Instruction instr) => true;
+    public override bool CanHandle(Instruction instr) => true;
 
-    public string Handle(Instruction instr) =>
+    public override string Handle(Instruction instr) =>
         instr.Operand != null
             ? $";; Unhandled operand: {instr.OpCode.Code} ({instr.Operand})"
             : $";; Unhandled opcode: {instr.OpCode.Code}";
@@ -28,13 +30,13 @@ public class DefaultInstructionHandler : IInstructionHandler
 // Constant loading
 // ------------------------
 [ILInstructionHandler]
-internal class LdcI4Handler : IInstructionHandler
+internal class LdcI4Handler : BaseInstructionHandler
 {
-    public bool CanHandle(Instruction instr) =>
+    public override bool CanHandle(Instruction instr) =>
         instr.OpCode.Code >= Code.Ldc_I4_0 && instr.OpCode.Code <= Code.Ldc_I4_8
         || instr.OpCode.Code == Code.Ldc_I4 || instr.OpCode.Code == Code.Ldc_I4_S;
 
-    public string Handle(Instruction instr)
+    public override string Handle(Instruction instr)
     {
         int value = instr.Operand != null
             ? Convert.ToInt32(instr.Operand)
@@ -47,14 +49,14 @@ internal class LdcI4Handler : IInstructionHandler
 // Local variable handling
 // ------------------------
 [ILInstructionHandler]
-internal class StlocHandler : IInstructionHandler
+internal class StlocHandler : BaseInstructionHandler
 {
-    public bool CanHandle(Instruction instr) =>
+    public override bool CanHandle(Instruction instr) =>
         instr.OpCode.Code == Code.Stloc_0 || instr.OpCode.Code == Code.Stloc_1 ||
         instr.OpCode.Code == Code.Stloc_2 || instr.OpCode.Code == Code.Stloc_3 ||
         instr.OpCode.Code == Code.Stloc_S;
 
-    public string Handle(Instruction instr)
+    public override string Handle(Instruction instr)
     {
         int index = instr.Operand is VariableDefinition v ? v.Index : instr.OpCode.Code switch
         {
@@ -69,14 +71,14 @@ internal class StlocHandler : IInstructionHandler
 }
 
 [ILInstructionHandler]
-internal class LdlocHandler : IInstructionHandler
+internal class LdlocHandler : BaseInstructionHandler
 {
-    public bool CanHandle(Instruction instr) =>
+    public override bool CanHandle(Instruction instr) =>
         instr.OpCode.Code == Code.Ldloc_0 || instr.OpCode.Code == Code.Ldloc_1 ||
         instr.OpCode.Code == Code.Ldloc_2 || instr.OpCode.Code == Code.Ldloc_3 ||
         instr.OpCode.Code == Code.Ldloc_S;
 
-    public string Handle(Instruction instr)
+    public override string Handle(Instruction instr)
     {
         int index = instr.Operand is VariableDefinition v ? v.Index : instr.OpCode.Code switch
         {
@@ -91,12 +93,12 @@ internal class LdlocHandler : IInstructionHandler
 }
 
 [ILInstructionHandler]
-internal class LdargHandler : IInstructionHandler
+internal class LdargHandler : BaseInstructionHandler
 {
-    public bool CanHandle(Instruction instr) =>
+    public override bool CanHandle(Instruction instr) =>
         instr.OpCode.Code is Code.Ldarg_0 or Code.Ldarg_1 or Code.Ldarg_2 or Code.Ldarg_3 or Code.Ldarg_S;
 
-    public string Handle(Instruction instr)
+    public override string Handle(Instruction instr)
     {
         int index = instr.Operand is ParameterDefinition p ? p.Index : instr.OpCode.Code switch
         {
@@ -114,17 +116,17 @@ internal class LdargHandler : IInstructionHandler
 // Control flow
 // ------------------------
 [ILInstructionHandler]
-internal class RetHandler : IInstructionHandler
+internal class RetHandler : BaseInstructionHandler
 {
-    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Ret;
-    public string Handle(Instruction instr) => "return";
+    public override bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Ret;
+    public override string Handle(Instruction instr) => "return";
 }
 
 // ------------------------
 // Arithmetic / Stack
 // ------------------------
 [ILInstructionHandler]
-internal class ArithmeticHandler : IInstructionHandler
+internal class ArithmeticHandler : BaseInstructionHandler
 {
     private static readonly Dictionary<Code, string> Map = new()
     {
@@ -154,23 +156,23 @@ internal class ArithmeticHandler : IInstructionHandler
         { Code.Neg, "i32.const 0\ni32.sub" }
     };
 
-    public bool CanHandle(Instruction instr) => Map.ContainsKey(instr.OpCode.Code);
+    public override bool CanHandle(Instruction instr) => Map.ContainsKey(instr.OpCode.Code);
 
-    public string Handle(Instruction instr) => Map[instr.OpCode.Code];
+    public override string Handle(Instruction instr) => Map[instr.OpCode.Code];
 }
 
 [ILInstructionHandler]
-internal class NopHandler : IInstructionHandler
+internal class NopHandler : BaseInstructionHandler
 {
-    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Nop;
-    public string Handle(Instruction instr) => "nop";
+    public override bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Nop;
+    public override string Handle(Instruction instr) => "nop";
 }
 
 [ILInstructionHandler]
-internal class PopHandler : IInstructionHandler
+internal class PopHandler : BaseInstructionHandler
 {
-    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Pop;
-    public string Handle(Instruction instr) => "drop";
+    public override bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Pop;
+    public override string Handle(Instruction instr) => "drop";
 }
 
 
@@ -178,33 +180,33 @@ internal class PopHandler : IInstructionHandler
 // Field access
 // ------------------------
 [ILInstructionHandler]
-internal class LdsfldHandler : IInstructionHandler
+internal class LdsfldHandler : BaseInstructionHandler
 {
-    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Ldsfld;
+    public override bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Ldsfld;
 
-    public string Handle(Instruction instr) =>
+    public override string Handle(Instruction instr) =>
         instr.Operand is FieldReference fieldRef
             ? $"global.get ${Conversion.GetWasmFieldName(fieldRef)}"
             : ";; Invalid Ldsfld operand";
 }
 
 [ILInstructionHandler]
-internal class StsfldHandler : IInstructionHandler
+internal class StsfldHandler : BaseInstructionHandler
 {
-    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Stsfld;
+    public override bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Stsfld;
 
-    public string Handle(Instruction instr) =>
+    public override string Handle(Instruction instr) =>
         instr.Operand is FieldReference fieldRef
             ? $"global.set ${Conversion.GetWasmFieldName(fieldRef)}"
             : ";; Invalid Stsfld operand";
 }
 
 [ILInstructionHandler]
-internal class LdfldHandler : IInstructionHandler
+internal class LdfldHandler : BaseInstructionHandler
 {
-    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Ldfld;
+    public override bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Ldfld;
 
-    public string Handle(Instruction instr)
+    public override string Handle(Instruction instr)
     {
         if (instr.Operand is not FieldReference field) return ";; Invalid ldfld operand";
 
@@ -239,11 +241,11 @@ i32.add             ;; compute address
 }
 
 [ILInstructionHandler]
-internal class StfldHandler : IInstructionHandler
+internal class StfldHandler : BaseInstructionHandler
 {
-    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Stfld;
+    public override bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Stfld;
 
-    public string Handle(Instruction instr)
+    public override string Handle(Instruction instr)
     {
         if (instr.Operand is not FieldReference field) return ";; Invalid stfld operand";
 
@@ -280,11 +282,11 @@ i32.add
 // Object instantiation
 // ------------------------
 [ILInstructionHandler]
-internal class NewObjHandler : IInstructionHandler
+internal class NewObjHandler : BaseInstructionHandler
 {
-    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Newobj;
+    public override bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Newobj;
 
-    public string Handle(Instruction instr)
+    public override string Handle(Instruction instr)
     {
         if (instr.Operand is not MethodReference ctor) return ";; Invalid newobj operand";
 
@@ -307,11 +309,11 @@ local.get $this
 // Method calls
 // ------------------------
 [ILInstructionHandler]
-internal class CallvirtHandler : IInstructionHandler
+internal class CallvirtHandler : BaseInstructionHandler
 {
-    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Callvirt;
+    public override bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Callvirt;
 
-    public string Handle(Instruction instr)
+    public override string Handle(Instruction instr)
     {
         if (instr.Operand is not MethodReference methodRef) return ";; Invalid callvirt operand";
 
@@ -328,10 +330,10 @@ call ${wasmName}
 }
 
 [ILInstructionHandler]
-internal class CallHandler : IInstructionHandler
+internal class CallHandler : BaseInstructionHandler
 {
-    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Call;
-    public string Handle(Instruction instr)
+    public override bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Call;
+    public override string Handle(Instruction instr)
     {
         if (instr.Operand is not MethodReference methodRef)
             return ";; Invalid call operand";
@@ -386,11 +388,13 @@ call ${wasmName}
 // Strings
 // ------------------------
 [ILInstructionHandler]
-internal class LdstrHandler : IInstructionHandler
+internal class LdstrHandler : BaseInstructionHandler
 {
-    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Ldstr;
+    public override Dictionary<string, string>? LocalVariables => new() { { "strPtr", "i32" } };
 
-    public string Handle(Instruction instr)
+    public override bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Ldstr;
+
+    public override string Handle(Instruction instr)
     {
         if (instr.Operand is not string str)
             return ";; Invalid ldstr operand";

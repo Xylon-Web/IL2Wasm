@@ -8,13 +8,13 @@ namespace IL2Wasm.Compilation;
 public class CompilerVisitor : ICompilerVisitor
 {
     private readonly IWatWriter _writer;
-    private readonly List<IInstructionHandler> _handlers;
+    private readonly List<BaseInstructionHandler> _handlers;
     private readonly List<(string module, string name, MethodDefinition method)> _jsImports = new();
 
-    public CompilerVisitor(IWatWriter writer, IEnumerable<IInstructionHandler> handlers)
+    public CompilerVisitor(IWatWriter writer, IEnumerable<BaseInstructionHandler> handlers)
     {
         _writer = writer;
-        _handlers = new List<IInstructionHandler>(handlers);
+        _handlers = new List<BaseInstructionHandler>(handlers);
     }
 
     public void VisitAssembly(AssemblyDefinition assembly)
@@ -121,16 +121,22 @@ public class CompilerVisitor : ICompilerVisitor
 
         _writer.BeginFunction(name, returnType, paramTypes);
 
-        // Declare $this local
-        if (hasThis || usesNewObj || instanceMethod)
-            _writer.DeclareLocal("this", "i32");
+        // Collect all locals from handlers
+        var localsToDeclare = new Dictionary<string, string>();
 
-        // Detect if method uses any ldstr instructions to declare $strPtr
-        bool usesLdstr = method.Body.Instructions.Any(instr => instr.OpCode.Code == Code.Ldstr);
-        if (usesLdstr)
-            _writer.DeclareLocal("strPtr", "i32");
+        if (hasThis || usesNewObj || instanceMethod)
+            localsToDeclare["this"] = "i32";
+
+        foreach (var handler in _handlers)
+            if (handler.LocalVariables != null)
+                foreach (var kvp in handler.LocalVariables)
+                    localsToDeclare[kvp.Key] = kvp.Value;
 
         // Declare locals
+        foreach (var kvp in localsToDeclare)
+            _writer.DeclareLocal(kvp.Key, kvp.Value);
+
+        // Declare locals for MethodDefinition variables (numeric only)
         int localCount = method.Body.Variables.Count;
         _writer.DeclareLocals(localCount);
 

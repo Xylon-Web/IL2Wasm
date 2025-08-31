@@ -111,12 +111,12 @@ public class CompilerVisitor : ICompilerVisitor
         }
         else if (!method.IsStatic) // instance method
         {
-            name = $"{method.DeclaringType.Name}_{method.Name}";
+            name = Conversion.GetWasmMethodName(method);
             paramTypes.Insert(0, "i32");
         }
         else
         {
-            name = method.Name; // static method
+            name = Conversion.GetWasmMethodName(method); // static method
         }
 
         _writer.BeginFunction(name, returnType, paramTypes);
@@ -152,7 +152,7 @@ public class CompilerVisitor : ICompilerVisitor
 
         _writer.EndFunction();
         if (method.IsPublic && method.IsStatic)
-            _writer.ExportFunction(method.Name);
+            _writer.ExportFunction(Conversion.GetWasmMethodName(method));
     }
 
 

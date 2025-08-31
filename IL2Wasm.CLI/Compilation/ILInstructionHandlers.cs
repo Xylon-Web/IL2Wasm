@@ -268,7 +268,7 @@ internal class LdsfldHandler : IInstructionHandler
 
     public string Handle(Instruction instr) =>
         instr.Operand is FieldReference fieldRef
-            ? $"global.get ${fieldRef.DeclaringType.Name}_{fieldRef.Name}"
+            ? $"global.get ${Conversion.GetWasmFieldName(fieldRef)}"
             : ";; Invalid Ldsfld operand";
 }
 
@@ -279,7 +279,7 @@ internal class StsfldHandler : IInstructionHandler
 
     public string Handle(Instruction instr) =>
         instr.Operand is FieldReference fieldRef
-            ? $"global.set ${fieldRef.DeclaringType.Name}_{fieldRef.Name}"
+            ? $"global.set ${Conversion.GetWasmFieldName(fieldRef)}"
             : ";; Invalid Stsfld operand";
 }
 
@@ -310,7 +310,7 @@ internal class LdfldHandler : IInstructionHandler
             }
         }
 
-        string wasmType = Conversion.GetWatType(field.FieldType) ?? "i32";
+        string wasmType = Conversion.GetWasmType(field.FieldType) ?? "i32";
         string loadInstr = wasmType + ".load";   // "i32.load", "f32.load", etc.
 
         return $@"
@@ -349,7 +349,7 @@ internal class StfldHandler : IInstructionHandler
             }
         }
 
-        string storeInstr = (Conversion.GetWatType(field.FieldType) ?? "i32") + ".store";
+        string storeInstr = (Conversion.GetWasmType(field.FieldType) ?? "i32") + ".store";
 
         return $@"
 ;; store field {field.Name} at offset {offset} in {typeDef.Name}
@@ -399,7 +399,7 @@ internal class CallvirtHandler : IInstructionHandler
     {
         if (instr.Operand is not MethodReference methodRef) return ";; Invalid callvirt operand";
 
-        string wasmName = $"{methodRef.DeclaringType.Name}_{methodRef.Name}";
+        string wasmName = Conversion.GetWasmMethodName(methodRef);
         string comment = !methodRef.HasThis || (methodRef.HasThis && !methodRef.Resolve().IsStatic)
             ? $";; callvirt {methodRef.DeclaringType.Name}.{methodRef.Name} (stack: ..., this, args...)"
             : $";; call {methodRef.DeclaringType.Name}.{methodRef.Name} (static method)";
@@ -452,7 +452,7 @@ internal class CallHandler : IInstructionHandler
 
 
         // Instance or static method calls
-        string wasmName = $"{typeName}_{methodName}";
+        string wasmName = Conversion.GetWasmMethodName(methodRef);
         string comment = !methodRef.HasThis || (methodRef.HasThis && !methodRef.Resolve().IsStatic)
             ? $";; callvirt {typeName}.{methodName} (stack: ..., this, args...)"
             : $";; call {typeName}.{methodName} (static method)";

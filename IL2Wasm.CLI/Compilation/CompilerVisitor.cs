@@ -40,9 +40,9 @@ internal class CompilerVisitor : ICompilerVisitor
         foreach (var import in _jsImports)
         {
             var paramTypes = import.method.Parameters
-                .Select(p => Conversion.GetWatType(p.ParameterType) ?? "i32")
+                .Select(p => Conversion.GetWasmType(p.ParameterType) ?? "i32")
                 .ToList();
-            var returnType = Conversion.GetWatType(import.method.ReturnType);
+            var returnType = Conversion.GetWasmType(import.method.ReturnType);
             _writer.DeclareImport(import.name, import.module, paramTypes, returnType);
         }
 
@@ -69,9 +69,9 @@ internal class CompilerVisitor : ICompilerVisitor
         {
             if (field.IsStatic)
             {
-                string? watType = Conversion.GetWatType(field.FieldType) ?? "i32";
+                string? watType = Conversion.GetWasmType(field.FieldType) ?? "i32";
                 string initialValue = watType == "f32" || watType == "f64" ? "0.0" : "0"; // Default to 0
-                _writer.DeclareGlobal($"{type.Name}_{field.Name}", watType, isMutable: !field.IsInitOnly, initialValue);
+                _writer.DeclareGlobal(Conversion.GetWasmFieldName(field), watType, isMutable: !field.IsInitOnly, initialValue);
             }
         }
 
@@ -87,13 +87,13 @@ internal class CompilerVisitor : ICompilerVisitor
         if (!method.HasBody || method.CustomAttributes.Any(a => a.AttributeType.FullName == "IL2Wasm.CLI.Interop.JSImportAttribute"))
             return;
 
-        string? returnType = Conversion.GetWatType(method.ReturnType);
+        string? returnType = Conversion.GetWasmType(method.ReturnType);
 
         // Convert parameters to WASM types
         var paramTypes = new List<string>();
         foreach (var param in method.Parameters)
         {
-            string? watType = Conversion.GetWatType(param.ParameterType) ?? "i32";
+            string? watType = Conversion.GetWasmType(param.ParameterType) ?? "i32";
             paramTypes.Add(watType);
         }
 

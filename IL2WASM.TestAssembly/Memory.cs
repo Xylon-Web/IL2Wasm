@@ -1,5 +1,9 @@
 ﻿namespace IL2Wasm.TestAssembly;
 
+/// <summary>
+/// Interaction with the linear memory pool.
+/// </summary>
+/// <remarks>This class is relied upon internally by IL2Wasm to allocate memory, be careful!</remarks>
 public static class Memory
 {
     /// <summary>

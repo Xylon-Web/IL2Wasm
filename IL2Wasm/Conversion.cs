@@ -47,6 +47,10 @@ internal static class Conversion
     {
         var sb = new StringBuilder();
 
+        // Dont mangle [NoMangle] methods
+        if (method is MethodDefinition md && md.CustomAttributes.Any(a => a.AttributeType.FullName == "IL2Wasm.Interop.NoMangleAttribute"))
+            return method.Name;
+
         // Start with declaring type
         if (!string.IsNullOrEmpty(method.DeclaringType.Namespace))
         {

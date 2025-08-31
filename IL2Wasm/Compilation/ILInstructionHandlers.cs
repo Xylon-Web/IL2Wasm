@@ -296,7 +296,7 @@ internal class NewObjHandler : BaseInstructionHandler
         return $@"
 ;; allocate {size} bytes for {typeDef.Name}
 i32.const {size}
-call $IL2Wasm_TestAssembly_Memory___alloc_Int32_
+call $__alloc
 local.set $this
 local.get $this
 call ${typeDef.Name}_ctor
@@ -406,11 +406,11 @@ internal class LdstrHandler : BaseInstructionHandler
 
         // Total size = 4 bytes for length + string bytes
         int totalSize = 4 + length;
-
+        
         // Allocate memory
         sb.AppendLine($@"
 i32.const {totalSize}       ;; total allocation size (4 + string bytes)
-call $IL2Wasm_TestAssembly_Memory___alloc_Int32_                ;; allocate memory
+call $__alloc               ;; allocate memory
 local.set $strPtr            ;; store pointer
 ");
 

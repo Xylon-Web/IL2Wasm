@@ -5,7 +5,7 @@ namespace IL2Wasm.Interop;
 /// Marks a externed method as a JavaScript import.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method, Inherited = false)]
-public class JSImportAttribute : Attribute
+public sealed class JSImportAttribute : Attribute
 {
     /// <summary>
     /// Name of the JS module (e.g., "console").

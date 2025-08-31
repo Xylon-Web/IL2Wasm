@@ -1,4 +1,6 @@
-﻿namespace IL2Wasm.TestAssembly;
+﻿using IL2Wasm.Interop;
+
+namespace IL2Wasm.TestAssembly;
 
 /// <summary>
 /// Interaction with the linear memory pool.
@@ -16,6 +18,7 @@ public static class Memory
     /// </summary>
     /// <param name="size">Size in bytes.</param>
     /// <returns>Pointer to allocated memory.</returns>
+    [NoMangle]
     public static int __alloc(int size)
     {
         LinearPointer += size;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
@@ -378,4 +379,71 @@ call ${wasmName}
 ";
     }
 
+}
+
+
+[ILInstructionHandler]
+internal class LdstrHandler : IInstructionHandler
+{
+    public bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Ldstr;
+
+    public string Handle(Instruction instr)
+    {
+        if (instr.Operand is not string str)
+            return ";; Invalid ldstr operand";
+
+        byte[] bytes = Encoding.UTF8.GetBytes(str);
+        int length = bytes.Length;
+
+        var sb = new StringBuilder();
+
+        // Total size = 4 bytes for length + string bytes
+        int totalSize = 4 + length;
+
+        // Allocate memory
+        sb.AppendLine($@"
+i32.const {totalSize}       ;; total allocation size (4 + string bytes)
+call $__alloc                ;; allocate memory
+local.set $strPtr            ;; store pointer
+");
+
+        // Store string length as little-endian 32-bit integer
+        sb.AppendLine($@"
+local.get $strPtr
+i32.const {length & 0xFF}
+i32.store8
+local.get $strPtr
+i32.const 1
+i32.add
+i32.const {(length >> 8) & 0xFF}
+i32.store8
+local.get $strPtr
+i32.const 2
+i32.add
+i32.const {(length >> 16) & 0xFF}
+i32.store8
+local.get $strPtr
+i32.const 3
+i32.add
+i32.const {(length >> 24) & 0xFF}
+i32.store8
+");
+
+        // Store each UTF-8 byte after the 4-byte length prefix
+        for (int i = 0; i < bytes.Length; i++)
+        {
+            sb.AppendLine($@"
+local.get $strPtr
+i32.const {4 + i}
+i32.add
+i32.const {bytes[i]}
+i32.store8
+");
+        }
+
+        // Push pointer onto stack
+        sb.AppendLine("local.get $strPtr");
+
+        return sb.ToString();
+    }
 }

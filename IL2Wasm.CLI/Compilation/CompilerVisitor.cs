@@ -125,6 +125,11 @@ internal class CompilerVisitor : ICompilerVisitor
         if (hasThis || usesNewObj || instanceMethod)
             _writer.DeclareLocal("this", "i32");
 
+        // Detect if method uses any ldstr instructions to declare $strPtr
+        bool usesLdstr = method.Body.Instructions.Any(instr => instr.OpCode.Code == Code.Ldstr);
+        if (usesLdstr)
+            _writer.DeclareLocal("strPtr", "i32");
+
         // Declare locals
         int localCount = method.Body.Variables.Count;
         _writer.DeclareLocals(localCount);

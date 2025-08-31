@@ -15,14 +15,14 @@ internal class Program
     {
 #if DEBUG
         // ------------------------
-        // Debug mode: Use test assembly
+        // Debug mode: Compile base lib
         // ------------------------
-        var assembly = AssemblyDefinition.ReadAssembly("IL2WASM.TestAssembly.dll");
+        var assembly = AssemblyDefinition.ReadAssembly("IL2WASM.BaseLib.dll");
 
         using var stream = new MemoryStream();
         var writer = new TextWatWriter(stream);
 
-        // Discover and instantiate all instruction handlers marked with [ILHandler]
+        // Discover and instantiate all instruction handlers marked with [ILInstructionHandler]
         var handlers = AppDomain.CurrentDomain.GetAssemblies()
             .SelectMany(a => a.GetTypes())
             .Where(t => typeof(IInstructionHandler).IsAssignableFrom(t)

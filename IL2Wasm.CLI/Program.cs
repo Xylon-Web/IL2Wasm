@@ -1,12 +1,13 @@
-﻿using System;
+﻿
+using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using IL2Wasm.CLI.Compilation;
+using IL2Wasm.Compilation;
 using Mono.Cecil;
 
-namespace IL2Wasm.CLI;
+namespace IL2Wasm;
 
 internal class Program
 {

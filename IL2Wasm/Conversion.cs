@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using Mono.Cecil;
 
-namespace IL2Wasm.CLI;
+namespace IL2Wasm;
 
 /// <summary>
 /// Utility class for converting C# to WASM.

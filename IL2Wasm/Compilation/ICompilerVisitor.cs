@@ -1,7 +1,7 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-namespace IL2Wasm.CLI.Compilation;
+namespace IL2Wasm.Compilation;
 
 internal interface ICompilerVisitor
 {

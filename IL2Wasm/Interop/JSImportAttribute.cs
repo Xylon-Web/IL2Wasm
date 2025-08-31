@@ -1,5 +1,5 @@
 ﻿
-namespace IL2Wasm.CLI.Interop;
+namespace IL2Wasm.Interop;
 
 /// <summary>
 /// Marks a externed method as a JavaScript import.

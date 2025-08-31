@@ -3,18 +3,18 @@ using System.Text;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-namespace IL2Wasm.CLI.Compilation;
+namespace IL2Wasm.Compilation;
 
 // ------------------------
 // Base instruction handler
 // ------------------------
-internal interface IInstructionHandler
+public interface IInstructionHandler
 {
     bool CanHandle(Instruction instr);
     string Handle(Instruction instr);
 }
 
-internal class DefaultInstructionHandler : IInstructionHandler
+public class DefaultInstructionHandler : IInstructionHandler
 {
     public bool CanHandle(Instruction instr) => true;
 
@@ -382,6 +382,9 @@ call ${wasmName}
 }
 
 
+// ------------------------
+// Strings
+// ------------------------
 [ILInstructionHandler]
 internal class LdstrHandler : IInstructionHandler
 {

@@ -1,9 +1,9 @@
 ﻿using System.IO;
 using System.Linq;
 
-namespace IL2Wasm.CLI;
+namespace IL2Wasm;
 
-internal interface IWatWriter
+public interface IWatWriter
 {
     void BeginModule();
     void EndModule();
@@ -23,7 +23,7 @@ internal interface IWatWriter
 /// <summary>
 /// Writes WebAssembly Text Format (WAT) to a stream.
 /// </summary>
-internal class TextWatWriter : IWatWriter
+public class TextWatWriter : IWatWriter
 {
     private readonly StreamWriter _writer;
 

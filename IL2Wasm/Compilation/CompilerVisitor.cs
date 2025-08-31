@@ -3,9 +3,9 @@ using System.IO;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-namespace IL2Wasm.CLI.Compilation;
+namespace IL2Wasm.Compilation;
 
-internal class CompilerVisitor : ICompilerVisitor
+public class CompilerVisitor : ICompilerVisitor
 {
     private readonly IWatWriter _writer;
     private readonly List<IInstructionHandler> _handlers;
@@ -25,7 +25,7 @@ internal class CompilerVisitor : ICompilerVisitor
                 foreach (var method in type.Methods)
                 {
                     var jsAttr = method.CustomAttributes
-                        .FirstOrDefault(a => a.AttributeType.FullName == "IL2Wasm.CLI.Interop.JSImportAttribute");
+                        .FirstOrDefault(a => a.AttributeType.FullName == "IL2Wasm.Interop.JSImportAttribute");
                     if (jsAttr != null)
                     {
                         string moduleName = jsAttr.ConstructorArguments[0].Value?.ToString() ?? "env";
@@ -84,7 +84,7 @@ internal class CompilerVisitor : ICompilerVisitor
 
     public void VisitMethod(MethodDefinition method)
     {
-        if (!method.HasBody || method.CustomAttributes.Any(a => a.AttributeType.FullName == "IL2Wasm.CLI.Interop.JSImportAttribute"))
+        if (!method.HasBody || method.CustomAttributes.Any(a => a.AttributeType.FullName == "IL2Wasm.Interop.JSImportAttribute"))
             return;
 
         string? returnType = Conversion.GetWasmType(method.ReturnType);

@@ -1,4 +1,4 @@
-﻿using IL2Wasm.CLI.Interop;
+﻿using IL2Wasm.Interop;
 
 namespace IL2Wasm.TestAssembly;
 

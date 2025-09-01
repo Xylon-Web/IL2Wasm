@@ -16,12 +16,22 @@ public static class Memory
     /// <summary>
     /// Allocates memory to the linear pool
     /// </summary>
-    /// <param name="size">Size in bytes.</param>
-    /// <returns>Pointer to allocated memory.</returns>
+    /// <param name="size">Size in bytes</param>
+    /// <returns>Pointer to allocated memory</returns>
     [NoMangle]
     public static int __alloc(int size)
     {
         LinearPointer += size;
         return LinearPointer;
+    }
+
+    /// <summary>
+    /// Frees memory from the linear pool.
+    /// </summary>
+    /// <param name="ptr">Pointer to free</param>
+    [NoMangle]
+    public static void __free(int ptr)
+    {
+        LinearPointer -= ptr;
     }
 }

@@ -1,6 +1,6 @@
 ﻿using IL2Wasm.Interop;
 
-namespace IL2Wasm.TestAssembly;
+namespace IL2Wasm.BaseLib;
 
 /// <summary>
 /// Interaction with the linear memory pool.

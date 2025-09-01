@@ -1,5 +1,5 @@
 ﻿
-namespace IL2Wasm.TestAssembly;
+namespace IL2Wasm.BaseLib;
 
 internal static class Test
 {

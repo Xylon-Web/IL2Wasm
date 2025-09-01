@@ -158,6 +158,32 @@ public class CompilerVisitor : ICompilerVisitor
 
     public void VisitInstruction(Instruction instruction)
     {
+        // Skip EmitWat's string operand as to not allocate memory for a string that doesn't actually exist
+        if (instruction.OpCode.Code == Code.Ldstr &&
+            instruction.Next?.OpCode.Code == Code.Call &&
+            instruction.Next.Operand is MethodReference nextMethod &&
+            nextMethod.FullName == "System.Void IL2Wasm.BaseLib.Compilation::EmitWat(System.String)")
+        {
+            return;
+        }
+
+        // Detect call to Compilation.EmitWat and add inline wat
+        if (instruction.OpCode.Code == Code.Call)
+        {
+            if (instruction.Operand is MethodReference methodRef &&
+                methodRef.FullName == "System.Void IL2Wasm.BaseLib.Compilation::EmitWat(System.String)")
+            {
+                // Look at previous instruction for ldstr
+                var prev = instruction.Previous;
+                if (prev != null && prev.OpCode.Code == Code.Ldstr)
+                {
+                    string watCode = prev.Operand as string ?? string.Empty;
+                    _writer.WriteInstruction(watCode);
+                    return;
+                }
+            }
+        }
+
         foreach (var handler in _handlers)
         {
             if (handler.CanHandle(instruction))

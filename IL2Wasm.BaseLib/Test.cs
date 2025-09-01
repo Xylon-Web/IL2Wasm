@@ -17,6 +17,7 @@ internal static class Test
 
     public static int TestMethod()
     {
+        Compilation.EmitWat(";; TEST INLINE WAT");
         Value = 42;
         return Value;
     }

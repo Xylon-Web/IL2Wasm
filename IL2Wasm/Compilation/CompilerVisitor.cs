@@ -9,7 +9,7 @@ public class CompilerVisitor : ICompilerVisitor
 {
     private readonly IWatWriter _writer;
     private readonly List<BaseInstructionHandler> _handlers;
-    private readonly List<(string module, string name, MethodDefinition method)> _jsImports = new();
+    private readonly List<(string module, string name, MethodDefinition method)> _imports = new();
 
     public CompilerVisitor(IWatWriter writer, IEnumerable<BaseInstructionHandler> handlers)
     {
@@ -30,14 +30,14 @@ public class CompilerVisitor : ICompilerVisitor
                     {
                         string moduleName = jsAttr.ConstructorArguments[0].Value?.ToString() ?? "env";
                         string name = jsAttr.ConstructorArguments[1].Value?.ToString() ?? method.Name;
-                        _jsImports.Add((moduleName, name, method));
+                        _imports.Add((moduleName, name, method));
                     }
                 }
 
         _writer.BeginModule();
 
         // Emit all imports first
-        foreach (var import in _jsImports)
+        foreach (var import in _imports)
         {
             var paramTypes = import.method.Parameters
                 .Select(p => Conversion.GetWasmType(p.ParameterType) ?? "i32")

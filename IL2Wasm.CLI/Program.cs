@@ -37,7 +37,8 @@ internal class Program
             return;
         }
 
-        var watBytes = DefaultCompiler.CompileFromPath(args[0]);
+        var assembly = AssemblyDefinition.ReadAssembly(args[0]);
+        var watBytes = DefaultCompiler.CompileAssembly(assembly);
 
         // Write WAT
         string tempFile = Path.GetTempFileName();

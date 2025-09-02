@@ -16,8 +16,3 @@ An experimental compiler that converts C# Intermediate Language (IL) into WebAss
 
 ## Contributing
 Want to contribute? Check out [CONTRIBUTING](contributing.md) to get a grasp on the codebase.
-
-## Debugging
-For debugging, run `IL2Wasm.CLI` in debug mode. This will compile `IL2Wasm.BaseLib` into WAT format and log it to the console.
-You can then test or validate this output using the [wat2wasm online demo](https://webassembly.github.io/wabt/demo/wat2wasm/).
-

@@ -467,9 +467,30 @@ i32.store8
 [ILInstructionHandler]
 internal class BrHandler : BaseInstructionHandler
 {
-    public override bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Br || instr.OpCode.Code == Code.Br_S;
+    public override bool CanHandle(Instruction instr) =>
+        instr.OpCode.Code == Code.Br || instr.OpCode.Code == Code.Br_S;
+
     public override string Handle(Instruction instr)
     {
         return $"br ${CurrentLabel}";
+    }
+}
+
+[ILInstructionHandler]
+internal class BrConditionalHandler : BaseInstructionHandler
+{
+    public override bool CanHandle(Instruction instr) =>
+        instr.OpCode.Code == Code.Brfalse || instr.OpCode.Code == Code.Brfalse_S ||
+        instr.OpCode.Code == Code.Brtrue || instr.OpCode.Code == Code.Brtrue_S;
+
+    public override string Handle(Instruction instr)
+    {
+        // Determine if we need to invert stack value
+        // brfalse = branch if false (0) -> invert top of stack
+        bool invert = instr.OpCode.Code == Code.Brfalse || instr.OpCode.Code == Code.Brfalse_S;
+
+        return invert
+            ? $"i32.eqz\nbr_if ${CurrentLabel} ;; branch if false"
+            : $"br_if ${CurrentLabel} ;; branch if true";
     }
 }

@@ -153,7 +153,7 @@ public class CompilerVisitor : ICompilerVisitor
 
         foreach (var instr in method.Body.Instructions)
         {
-            if (instr.OpCode.FlowControl == FlowControl.Branch)
+            if (instr.OpCode.FlowControl == FlowControl.Branch || instr.OpCode.FlowControl == FlowControl.Cond_Branch)
             {
                 int currentOffset = instr.Offset;
 
@@ -173,12 +173,20 @@ public class CompilerVisitor : ICompilerVisitor
                 // Emit block
                 var label = Guid.NewGuid().ToString("N").Substring(0, 8);
                 _writer.WriteInstruction($"(block ${label}");
-
                 _currentLabel = label;
 
                 // Track target offsets for closing blocks
                 if (!_closingOffsets.Contains(targetOffset))
                     _closingOffsets.Add(targetOffset);
+
+                // If the previous instruction pushed to the stack, we need to duplicate it in the block
+                var prevInstr = instr.Previous;
+                if (prevInstr != null && (prevInstr.OpCode.Code == Code.Ldloc || prevInstr.OpCode.Code == Code.Ldloc_0 ||
+                                          prevInstr.OpCode.Code == Code.Ldloc_1 || prevInstr.OpCode.Code == Code.Ldloc_2 ||
+                                          prevInstr.OpCode.Code == Code.Ldloc_3 || prevInstr.OpCode.Code == Code.Ldloc_S))
+                {
+                    VisitInstruction(prevInstr);
+                }
             }
 
             VisitInstruction(instr);
@@ -186,7 +194,9 @@ public class CompilerVisitor : ICompilerVisitor
             // Close any open blocks
             if (_closingOffsets.Contains(instr.Offset))
             {
+                _writer.WriteInstruction("drop");
                 _writer.WriteInstruction(")");
+                _writer.WriteInstruction("local.get 1");
                 _closingOffsets.Remove(instr.Offset);
                 _currentLabel = null;
             }

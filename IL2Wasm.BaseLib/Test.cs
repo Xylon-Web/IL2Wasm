@@ -3,25 +3,15 @@ namespace IL2Wasm.BaseLib;
 
 internal static class Test
 {
-    public static int Value
+    public static int Value;
+
+    public static int TestMethod(int num)
     {
-        get
-        {
-            return 13;
-        }
+        Value = 7;
 
-        set
-        {
-        }
-    }
+        if (Value == num)
+            return 999;
 
-    public static int TestMethod()
-    {
-        if (Value == 13)
-        {
-            return 32;
-        }
-
-        return Value;
+        return 0;
     }
 }

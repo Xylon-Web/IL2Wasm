@@ -15,4 +15,4 @@ An experimental compiler that converts C# Intermediate Language (IL) into WebAss
 - `wat2wasm` is not required if you only need to inspect or view the generated WAT output.
 
 ## Contributing
-Want to contribute? Check out [CONTRIBUTING](contributing.md) to get a grasp on the codebase.
+Want to contribute? Check out [CONTRIBUTING](CONTRIBUTING.md) to get a grasp on the codebase.

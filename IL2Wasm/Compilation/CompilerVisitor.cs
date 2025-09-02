@@ -11,6 +11,10 @@ public class CompilerVisitor : ICompilerVisitor
     private readonly List<BaseInstructionHandler> _handlers;
     private readonly List<(string module, string name, MethodDefinition method)> _imports = new();
 
+    private readonly List<int> _closingOffsets = new();
+
+    private string? _currentLabel;
+
     public CompilerVisitor(IWatWriter writer, IEnumerable<BaseInstructionHandler> handlers)
     {
         _writer = writer;
@@ -148,7 +152,46 @@ public class CompilerVisitor : ICompilerVisitor
         }
 
         foreach (var instr in method.Body.Instructions)
+        {
+            if (instr.OpCode.FlowControl == FlowControl.Branch)
+            {
+                int currentOffset = instr.Offset;
+
+                var targetInstruction = instr.Operand as Instruction;
+                if (targetInstruction == null)
+                    continue;
+
+                int targetOffset = targetInstruction.Offset;
+
+                // Skip trivial jumps
+                if (currentOffset + instr.GetSize() == targetOffset)
+                    continue;
+
+                if (targetOffset < currentOffset)
+                    continue; // Ignore backward branches for now, in the future they'll be loops
+
+                // Emit block
+                var label = Guid.NewGuid().ToString("N").Substring(0, 8);
+                _writer.WriteInstruction($"(block ${label}");
+
+                _currentLabel = label;
+
+                // Track target offsets for closing blocks
+                if (!_closingOffsets.Contains(targetOffset))
+                    _closingOffsets.Add(targetOffset);
+            }
+
             VisitInstruction(instr);
+
+            // Close any open blocks
+            if (_closingOffsets.Contains(instr.Offset))
+            {
+                _writer.WriteInstruction(")");
+                _closingOffsets.Remove(instr.Offset);
+                _currentLabel = null;
+            }
+        }
+
 
         _writer.EndFunction();
         if (method.IsPublic && method.IsStatic)
@@ -188,6 +231,7 @@ public class CompilerVisitor : ICompilerVisitor
         {
             if (handler.CanHandle(instruction))
             {
+                handler.CurrentLabel = _currentLabel;
                 _writer.WriteInstruction(handler.Handle(instruction));
                 return;
             }

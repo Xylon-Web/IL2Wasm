@@ -10,7 +10,13 @@ namespace IL2Wasm.Compilation;
 // ------------------------
 public abstract class BaseInstructionHandler
 {
+    /// <summary>
+    /// The current block/loop label if inside a block/loop, otherwise null.
+    /// </summary>
+    public string? CurrentLabel { get; set; }
+
     public virtual Dictionary<string, string>? LocalVariables { get; set; }
+
 
     public abstract bool CanHandle(Instruction instr);
     public abstract string Handle(Instruction instr);
@@ -452,5 +458,18 @@ i32.store8
         sb.AppendLine("local.get $strPtr");
 
         return sb.ToString();
+    }
+}
+
+// ------------------------
+// Branching
+// ------------------------
+[ILInstructionHandler]
+internal class BrHandler : BaseInstructionHandler
+{
+    public override bool CanHandle(Instruction instr) => instr.OpCode.Code == Code.Br || instr.OpCode.Code == Code.Br_S;
+    public override string Handle(Instruction instr)
+    {
+        return $"br ${CurrentLabel}";
     }
 }

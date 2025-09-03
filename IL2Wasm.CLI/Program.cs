@@ -19,12 +19,9 @@ internal class Program
 
         Console.WriteLine($"WAT:\n{Encoding.UTF8.GetString(watBytes)}");
 
-        // Write WAT
-        string tempFile = Path.GetTempFileName();
-        File.WriteAllBytes(tempFile, watBytes);
-
         // Output Wasm
-        Wat2Wasm.Compile(tempFile, Path.Combine(Directory.GetCurrentDirectory(), $"{assembly.Name.Name}.wasm"));
+        byte[] wasm = Wat2Wasm.Compile(Encoding.UTF8.GetString(watBytes));
+        File.WriteAllBytes(Path.Combine(Directory.GetCurrentDirectory(), $"{assembly.Name.Name}.wasm"), wasm);
         Console.WriteLine($"WASM compilation complete: {assembly.Name.Name}.wasm");
 
 #else
@@ -40,13 +37,10 @@ internal class Program
         var assembly = AssemblyDefinition.ReadAssembly(args[0]);
         var watBytes = DefaultCompiler.CompileAssembly(assembly);
 
-        // Write WAT
-        string tempFile = Path.GetTempFileName();
-        File.WriteAllBytes(tempFile, watBytes);
-
         // Output Wasm
-        Wat2Wasm.Compile(tempFile, Path.Combine(Directory.GetCurrentDirectory(), $"{assembly.Name}.wasm"));
-        Console.WriteLine($"WASM compilation complete: {assembly.Name}.wasm");
+        byte[] wasm = Wat2Wasm.Compile(Encoding.UTF8.GetString(watBytes));
+        File.WriteAllBytes(Path.Combine(Directory.GetCurrentDirectory(), $"{assembly.Name.Name}.wasm"), wasm);
+        Console.WriteLine($"WASM compilation complete: {assembly.Name.Name}.wasm");
 #endif
     }
 }
